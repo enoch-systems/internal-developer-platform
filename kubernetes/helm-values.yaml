@@ -1,0 +1,78 @@
+# Platform Kubernetes Configuration
+
+# Namespace settings
+namespace: idp-system
+
+# ArgoCD Configuration
+argocd:
+  enabled: true
+  namespace: argocd
+  version: "2.9"
+  server:
+    service:
+      type: LoadBalancer
+  configs:
+    params:
+      server.insecure: true
+  repositories:
+    - name: internal
+      url: https://github.com/your-org/infrastructure.git
+
+# Prometheus Stack (includes Grafana)
+monitoring:
+  enabled: true
+  prometheus:
+    prometheusSpec:
+      retention: 15d
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 20Gi
+  grafana:
+    adminPassword: admin123
+    service:
+      type: LoadBalancer
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: 'default'
+            orgId: 1
+            folder: ''
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/default
+
+# Nginx Ingress Controller
+ingress:
+  enabled: true
+  controller:
+    kind: DaemonSet
+    service:
+      type: LoadBalancer
+    metrics:
+      enabled: true
+
+# API Gateway
+apigateway:
+  enabled: true
+  image:
+    repository: nginx
+    tag: "1.25-alpine"
+  service:
+    type: LoadBalancer
+    port: 80
+
+# Service Discovery
+servicemesh:
+  enabled: true
+  type: consul
+  consul:
+    enabled: true
+    service:
+      type: LoadBalancer
